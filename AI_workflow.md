@@ -1,5 +1,9 @@
 # This is how building of AI+CI/CD process could look like [WIP]
 
+This wiki page is an attempt to outline the general strategy for developing an AI model for an AI-driven product, the key ideas we want to achieve during development, the assumptions we're working under, and the steps necessary to achieve them.
+
+author: [@robolamp](https://github.com/robolamp)
+
 ## Key ideas:
 
 1. Continuous delivery when possible;  
@@ -50,6 +54,17 @@
 
 3. **Model Fine Tuning: Improving upon the foundation model**    
    Enough data is collected to fine-tune the model and to launch a full CI/CD process with periodical updates of the model trained/fine-tuned on the new data and/or user feedback.
+   <u>TODO on this stage:</u>
+   * Continue with labeling/human feedback gathering/etc;
+   * Perform fine-tuning methods evaluation; find the best working for the project;
+   * Create a training pipeline for fine-tuning (and reuse eval pipeline from stage 2);
+   * Create a procedure for delivery of fine-tuned models.
+
+   <u>Outputs:</u>
+   * Dataset (and/or its labeled part) big enough to LoRa or proper fine-tuning and evaluation of fine-tuned models evaluation;
+   * Fine-tuning (short training) pipeline and all the required infrastructure;
+   * Adapters for fine-tuned foundational models.
+
 
 4. **Model Redesign: Building out own model**  
    We collected enough data to train a fully custom model if necessary, the CI/CD process from stage 3 remains intact excluding longer duration of training, necessity to stop on checkpoints etc etc.
