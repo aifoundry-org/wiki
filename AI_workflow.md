@@ -54,6 +54,7 @@ author: [@robolamp](https://github.com/robolamp)
 
 3. **Model Fine Tuning: Improving upon the foundation model**    
    Enough data is collected to fine-tune the model and to launch a full CI/CD process with periodical updates of the model trained/fine-tuned on the new data and/or user feedback.
+
    <u>TODO on this stage:</u>
    * Continue with labeling/human feedback gathering/etc;
    * Perform fine-tuning methods evaluation; find the best working for the project;
