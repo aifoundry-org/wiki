@@ -3,14 +3,15 @@
 This wiki page is an attempt to outline the general strategy for developing an AI model for an AI-driven product, the key ideas we want to achieve during development, the assumptions we're working under, and the steps necessary to achieve them.
 
 author: [@robolamp](https://github.com/robolamp)
+thx [@nlsio](https://github.com/nlsio) for feedback and advises
 
 ## Key ideas:
 
 1. Continuous delivery when possible;  
 2. Delivery when even when we don’t have enough info (metrics, requirements, etc);  
-   1. Make progression on AI models  
+   *  Make progression on AI models  
 3. Building a CI/CD process for AI as a result.  
-   1. Ideal scenario: updating models on new training data and through releases 
+   *  Ideal scenario: updating models on new training data and through releases 
 
 ## Key assumptions:
 
