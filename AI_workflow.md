@@ -72,6 +72,7 @@ thx [@nlsio](https://github.com/nlsio) for feedback and advises
 
 
 ## What is not covered yet:
+* Engineering decigions which could be made after each stage;
 * Mulitple model systems;
 * Models deployement/serving;
 * RAG and similar approaches;
