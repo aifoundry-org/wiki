@@ -17,8 +17,7 @@ thx [@nlsio](https://github.com/nlsio) for feedback and advises
 
 1. The product requirements can be solved with AI  
 2. The product requirements need AI to be solved efficiently  
-3. There’s foundation models\* available in the required domain, and could work as a basis.  
-   
+3. There’s foundation models\* available in the required domain, and could work as a basis.
 
 \* foundation model — A large, general-purpose model that can be fine-tuned for specific applications, much like how a versatile tool can be used for different jobs with a few adjustments ([https://en.wikipedia.org/wiki/Foundation\_model](https://en.wikipedia.org/wiki/Foundation\_model))
 
@@ -70,3 +69,11 @@ thx [@nlsio](https://github.com/nlsio) for feedback and advises
 
 4. **Model Redesign: Building out own model**  
    We collected enough data to train a fully custom model if necessary, the CI/CD process from stage 3 remains intact excluding longer duration of training, necessity to stop on checkpoints etc etc.
+
+
+## What is not covered yet:
+* Mulitple model systems;
+* Models deployement/serving;
+* RAG and similar approaches;
+* Custom models development.
+
