@@ -76,4 +76,14 @@
 			- **Disadvantages**  
 				- Limited availability and software support.
 				- Not yet a serious competitor in the global market, especially against **NVIDIA** and **AMD**.
-
+- ### Specilized hardware
+    - #### Google TPU
+    - #### Graphcore IPU
+    - #### Amazon Trainium
+    - #### SambaNova SN Series
+    - #### Cerebras CS-2
+    - #### Groq
+    - #### D-Matrix Corsair
+    - #### Cambricon Siyuan
+    - #### Intel Gaudi
+    - #### Etched Sohu
