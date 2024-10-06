@@ -6,12 +6,34 @@ Ollama is explicitly Docker-derived, in format, style, and distribution, and sta
 
 ## Model Locator (URI)
 
-Ollama uses a Docker-style reference (like URI) for models. For example,
-`ollama.com/library/llama3:8B` is a model reference. There also is a short
-format of `llama3:8B`, which is equivalent to `ollama.com/library/llama3:8B`.
+Ollama uses a URI, similar to Docker for models. They are composed of:
+
+* protocol
+* registry, i.e. host
+* namespace
+* repository
+* tag
+
+For example, `https://ollama.com/library/llama3:8B` is a model reference, this is not 100% a URL,
+as it cannot be entered into a browser.
+
+When parts of the locator are not defined, there are defaults:
+
+* Default protocol is `https`
+* Default registry is `ollama.com`
+* Default namespace is `library`
+* Default tag is `latest`
+
+Thus, all of the following default to `https://ollama.com/library/llama3:latest`
+
+* `ollama.com/library/llama3:latest`
+* `library/llama3:latest`
+* `llama3:latest`
+
+There is no default repository.
 
 Based on this, it should be possible to reference models elsewhere, like
-`myserver.com/models/smartmodel:1.0`. Initial checks have not shown it yet.
+`https://myserver.com/models/smartmodel:1.0`.
 
 ## Distribution Hub
 
@@ -32,9 +54,73 @@ distribution-time, issue.
 
 ## Distribution Spec
 
-Still being determined. It appears to be similar to Docker, or more specifically,
+The distribution spec is similar to Docker, or more specifically,
 [OCI Distribution Spec](https://github.com/opencontainers/distribution-spec/blob/main/spec.md),
 but not 100% compatible.
+
+For example, the spec defines that a manifest is available at `GET /v2/<name>/manifests/<tag>`,
+which is how ollama pulls manifests and the URL on ollama.com:
+
+```sh
+$ curl -sL https://ollama.com/v2/library/llama3/manifests/latest | jq
+{
+  "schemaVersion": 2,
+  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+  "config": {
+    "digest": "sha256:3f8eb4da87fa7a3c9da615036b0dc418d31fef2a30b115ff33562588b32c691d",
+    "mediaType": "application/vnd.docker.container.image.v1+json",
+    "size": 485
+  },
+  "layers": [
+    {
+      "digest": "sha256:6a0746a1ec1aef3e7ec53868f220ff6e389f6f8ef87a01d77c96807de94ca2aa",
+      "mediaType": "application/vnd.ollama.image.model",
+      "size": 4661211424
+    },
+    {
+      "digest": "sha256:4fa551d4f938f68b8c1e6afa9d28befb70e3f33f75d0753248d530364aeea40f",
+      "mediaType": "application/vnd.ollama.image.license",
+      "size": 12403
+    },
+    {
+      "digest": "sha256:8ab4849b038cf0abc5b1c9b8ee1443dca6b93a045c2272180d985126eb40bf6f",
+      "mediaType": "application/vnd.ollama.image.template",
+      "size": 254
+    },
+    {
+      "digest": "sha256:577073ffcc6ce95b9981eacc77d1039568639e5638e83044994560d9ef82ce1b",
+      "mediaType": "application/vnd.ollama.image.params",
+      "size": 110
+    }
+  ]
+}
+```
+
+Similarly, blobs are available at `GET /v2/<name>/blobs/<digest>`, which is how ollama
+pulls blobs and the correct path on ollama.com:
+
+```sh
+$ curl -sL https://ollama.com/v2/library/llama3/blobs/sha256:577073ffcc6ce95b9981eacc77d1039568639e5638e83044994560d9ef82ce1b
+{"num_keep":24,"stop":["\u003c|start_header_id|\u003e","\u003c|end_header_id|\u003e","\u003c|eot_id|\u003e"]}
+```
+
+There are a few key areas where ollama.com veers from the spec:
+
+* `GET /v2/` API endpoint is not supported, which is a key way to check support, see [this part of the spec](https://github.com/opencontainers/distribution-spec/blob/main/spec.md#determining-support). This, in turn, breaks OCI and Docker tools and libraries that use that endpoint.
+* `GET /v2/<name>/tags/list` is not supported.
+
+We have not checked uploads.
+
+Note that ollama.com does not use the referrer based authentication, used at docker.io
+and other locations. ollama.com does not appear to have any form of authentication and private
+model support.
+
+This will create two issues:
+
+* rate pulls, as there is no way to limit pulls
+* private models
+
+We expect these to be fixed eventually.
 
 ## Local Storage
 
