@@ -102,3 +102,100 @@ TMPDIR/runners/metal/ollama_llama_server --model ~/.ollama/models/blobs/sha256-6
 When the server `GenerateHandler` has a handle to a runner with the model loaded,
 it calls [`r.Completion()`](https://github.com/ollama/ollama/blob/defbf9425af8228f3420d567e9eeaa29d8ac87e3/server/routes.go#L246), passing it the prompt, format,
 images and options as parameters, and a handler function for the response.
+
+## llama.cpp build
+
+As described above, the ollama binary contains the `llama.cpp` binary embedded within it.
+
+The embedding and build process is handled by the `go:embed` directive in the `ollama` source code.
+Specifically:
+
+1. `go generate` builds `llama.cpp` for the target platform if it does not already exist.
+1. `go build` embeds the binary into the `ollama` binary using `//go:embed` directives.
+
+### Building
+
+Building of `llama.cpp` for the target platform is handled via `go generate`.
+All builds take place using code in the directory [`llm/generate`](https://github.com/ollama/ollama/blob/defbf9425af8228f3420d567e9eeaa29d8ac87e3/llm/generate).
+
+There is one file for each OS: linux, darwin and windows, and a script for each OS:
+
+* [`gen_linux.sh`](https://github.com/ollama/ollama/blob/defbf9425af8228f3420d567e9eeaa29d8ac87e3/llm/generate/gen_linux.sh)
+* [`gen_darwin.sh`](https://github.com/ollama/ollama/blob/defbf9425af8228f3420d567e9eeaa29d8ac87e3/llm/generate/gen_darwin.sh)
+* [`gen_windows.ps1`](* [`gen_linux.sh`](https://github.com/ollama/ollama/blob/defbf9425af8228f3420d567e9eeaa29d8ac87e3/llm/generate/gen_windows.ps1)
+
+The `generate_*.go` files are just wrappers to call the build scripts. For example, linux:
+
+```go
+package generate
+
+//go:generate bash ./gen_linux.sh
+```
+
+The build scripts share common functions in [`gen_common.sh`](https://github.com/ollama/ollama/blob/defbf9425af8228f3420d567e9eeaa29d8ac87e3/llm/generate/gen_common.sh).
+
+The actual `llama.cpp` source code is expected to live in the `llm/llama.cpp` directory, which
+is parallel to the `llm/generate` directory where the build scripts live.
+The `llm/llama.cpp` directory is blank, and is populated as a submodule pointing to the
+original `llama.cpp` repository:
+
+```sh
+$ cat .gitmodules
+[submodule "llama.cpp"]
+        path = llm/llama.cpp
+        url = https://github.com/ggerganov/llama.cpp.git
+        shallow = true
+```
+
+The build process then is:
+
+1. Call `go generate`
+1. The `generate_*.go` file calls the appropriate build script
+1. The build script:
+   1. updates the git submodule to ensure `llm/llama.cpp` is populated
+   1. performs the build
+   1. deposits the binary in the `build/<os>/<arch>/` directory
+
+### Embedding
+
+The embedding all occurs in the [build/ directory](https://github.com/ollama/ollama/tree/0077e22d524edbad949002216f2ba6206aacb1b5/build), whose structure is:
+
+```sh
+$ tree build
+build
+├── darwin
+    ├── amd64
+        └── placeholder
+    └── arm64
+        └── placeholder
+├── linux
+    ├── amd64
+        └── placeholder
+    └── arm64
+        └── placeholder
+├── embed_darwin_amd64.go
+├── embed_darwin_arm64.go
+├── embed_linux.go
+└── embed_unused.go
+```
+
+There is an `embed_*.go` file for each target platform, specifically `linux/amd64`, `linux/arm64`,
+`darwin/amd64` and `darwin/amd64`.
+
+A simple file is:
+
+```go
+package build
+
+import "embed"
+
+//go:embed linux/*
+var EmbedFS embed.FS
+```
+
+This embeds the `linux/` directory inside the final go binary, which then can be read later by the
+binary itself referencing `build.EmbedFS`.
+
+The `<os>/<arch>` linux directories, e.g. `linux/amd64/` contain placeholders. They are committed
+to the repository to ensure that the directory structure is present when building the binary,
+otherwise `go:embed` will fail.
