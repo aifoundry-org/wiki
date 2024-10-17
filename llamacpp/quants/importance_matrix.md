@@ -6,7 +6,7 @@ The common approach for computing an importance matrix is to get the weights gra
 
 The goal is to minimize the impact of the quantization. 
 
-Function to minimize states al follows :
+Function to minimize states as follows :
 
 $$F = [\sum_j(q_j - w_j)a_j]^2$$
 
