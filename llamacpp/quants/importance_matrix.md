@@ -12,6 +12,21 @@ $$F = [\sum_j(q_j - w_j)a_j]^2$$
 
 $q_j$ - quantized weights tensor row\
 $w_j$ - weights tensor row\
-$a_j$ - activation column\
+$a_j$ - activation column
 
 To solve this problem second-order optimization approach is used.
+
+In order to perform second order optimization, the full Hessian should be computed.
+
+The Hessian of the function look like this:
+$$H_{i, j} = \sum a_i a_j$$
+
+The Hessian matrix reflects the sensitivity of function $F$ to the changes in the quantized weights.
+
+But the computation of full Hessian would ve expensive in terms of RAM and computing power. So, only computation of the diagonal elements are performed *( activations where $i=j$)*. The reason for that is follows:
+___
+For non-diagonal elements the terms $\langle a_i a_j\rangle$ are typically small because the activations are not correlated and the expectation value $\langle a_i \rangle$ is nearly zero.
+___
+Therefore non-diagonal values could be amended.
+
+Also there is risks of using full Hessian that could lead to overfitting on a specific training corpus.
