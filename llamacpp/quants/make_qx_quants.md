@@ -67,45 +67,51 @@ The approach is to iterate over some permutations of $q_i$ to achieve lower perp
 ### Algorithm Outline
 
 1. **Choose an initial scale $s$**:
-   $$
-   s_m = \frac{(\sum_i w_i q_i x_i)_m}{(\sum_i w_i q_i^2)_m}
-   $$
+
+$$
+s_m = \frac{(\sum_i w_i q_i x_i)_m}{(\sum_i w_i q_i^2)_m}
+$$
 
 2. **Choose the initial $iscale$**.
 
 3. **Define the initial alignment between quantized values and original ones**:
-   $$
-   best_m = \frac{(\sum_i w_i q_i x_i)^2_m}{(\sum_i w_i q_i^2)_m}
-   $$
+
+$$
+best_m = \frac{(\sum_i w_i q_i x_i)^2_m}{(\sum_i w_i q_i^2)_m}
+$$
 
 4. **Calculate the quantized weights based on the chosen $iscale$**:
-   $$
-   q = \text{clip}(\text{round}(iscale \cdot x), i, j)
-   $$
+
+$$
+q = \text{clip}(\text{round}(iscale \cdot x), i, j)
+$$
 
 5. **Calculate new intermediate sums based on the newly quantized weights**:
-   $$
-   (\sum_i w_i q_i x_i)_{m+1}
-   $$
-   $$
-   (\sum_i w_i q_i^2)_{m+1}
-   $$
+
+$$
+(\sum_i w_i q_i x_i)_{m+1}
+$$
+
+$$
+(\sum_i w_i q_i^2)_{m+1}
+$$
 
 6. **Check if the current alignment is better than the previous one, and update the scale and alignment**:
-   $$
-   s_{m+1} = 
-   \begin{cases}
-   \frac{(\sum_i w_i q_i x_i)_{m+1}}{(\sum_i w_i q_i^2)_{m+1}} & \text{if} & (\sum_i w_i q_i x_i)^2 > best_{m} \cdot \sum_i w_i q_i^2 \\
-   s_m & \text{otherwise}
-   \end{cases}
-   $$
-   
-   $$
-   best_{m+1} = 
-   \begin{cases} 
-   s_{m+1} \cdot \sum_i w_i q_i x_i & \text{if} & (\sum_i w_i q_i x_i)^2 > best_m \cdot \sum_i w_i q_i^2 \\
-   best_m & \text{otherwise}
-   \end{cases}
-   $$
+
+$$
+s_{m+1} = 
+\begin{cases}
+\frac{(\sum_i w_i q_i x_i)_{m+1}}{(\sum_i w_i q_i^2)_{m+1}} & \text{if} & (\sum_i w_i q_i x_i)^2 > best_{m} \cdot \sum_i w_i q_i^2 \\
+s_m & \text{otherwise}
+\end{cases}
+$$
+
+$$
+best_{m+1} = 
+\begin{cases} 
+s_{m+1} \cdot \sum_i w_i q_i x_i & \text{if} & (\sum_i w_i q_i x_i)^2 > best_m \cdot \sum_i w_i q_i^2 \\
+best_m & \text{otherwise}
+\end{cases}
+$$
 
 7. **Vary $iscale$** and repeat from step 4.
