@@ -1,73 +1,111 @@
 # Make_qx_quants
 [Link to the method](https://github.com/ggerganov/llama.cpp/blob/30f80ca0bcee58669ada7a94244eeccc8c4807cc/ggml/src/ggml-quants.c#L1639)
 
-## Problem statement
-Idea is to formulate the quantization problem as follows. 
+# Problem Statement
 
-Minimize the square difference between quantized weights and the original values.
-1. $$F = \sum_i w_i (s q_i - x_i)^2 $$
+The idea is to formulate the quantization problem as follows:
 
-In this equation:
-- $w_i$ - weights importance *(taken from improtance matrix on the previous step)*
-- $s$   - quantization scale
-- $q_i$ - quantized weights
-- $x_i$ - original weights
+Minimize the square difference between quantized weights and the original values:
 
-Equation can be rewritten:
+1. $$F = \sum_i w_i (s q_i - x_i)^2$$
 
-$$F = \sum_i w_i (s q_i - x_i)^2 = 
-\sum_i (w_i s^2q_i^2 - 2 w_i s q_i x_i + w_i x_i^2)$$
+Where:
+- $w_i$ is the weight importance *(taken from the importance matrix in the previous step)*,
+- $s$ is the quantization scale,
+- $q_i$ are the quantized weights,
+- $x_i$ are the original weights.
 
-And clarified:
+The equation can be rewritten as:
 
-$$F = s^2\sum_i w_i q_i^2 - 2s \sum_i w_i q_i x_i + \sum_i w_i x_i^2$$
-
-Let's take derivative of that function and solver for $s$ in order to determine scale.
-
-$$\frac{dF}{ds} = 2s \sum_i w_i q_i^2 -2 \sum_i w_i q_i x_i$$
-$$\frac{dF}{ds} = 0 \implies 2s \sum_i w_i q_i^2 -2 \sum_i w_i q_i x_i = 0 $$
-$$s\sum_iw_iq_i^2 = \sum w_i q_i x_i$$
-
-Solving for s:
-$$s = \frac{\sum_i w_i q_i x_i}{\sum_i w_i q_i^2}$$
-
-Which is exactly what is written here https://github.com/ggerganov/llama.cpp/blob/30f80ca0bcee58669ada7a94244eeccc8c4807cc/ggml/src/ggml-quants.c#L1681
-
-Now scale $s$ can be computer for the given $q_i$. But the actual problem is to find such $q_i$ and $s$ that would minimize function 1. That is formulated as mixed integer problem that is very hard to solve in general.
-___
-
-So, the approach is to iterate over some permutations of $q$ in order to achieve lower ppl of target model rather than minimize function 1. directly, because this function is a measure of similarity of quantizedand not the measure of quality of model itself.
-
-The algorithm is folows:
-1. Choose initial scale $s$
-$$s_m = \frac{(\sum_i w_i q_i x_i)_m}{(\sum_i w_i q_i^2)_m}$$
-2. Choose the initial $iscale$
-
-3. Choose initial definition of allignment of quantized values and the original ones as:
-$$best_m = \frac{(\sum_i (w_i q_i x_i)^2)_m}{(\sum_i w_i q_i^2)_m} $$
-
-4. Calculate the quantized weight based on chosen $iscale$:
-$$q = clip(round(iscale * x), i,j)$$
-
-5. Calculate new intermediate sums based on newly quantized weights:
-$$(\sum_i w_i q_i x_i)_{m+1}$$
-$$(\sum_i w_i q_i^2)_{m+1}$$
-
-6. Check if current allignment better than the previous one and update scale and allignment:
 $$
-s_{m+1} = 
-\begin{cases}
-\frac{(\sum_i w_i q_i x_i)_{m+1}}{(\sum_i w_i q_i^2)_{m+1}} & if & \sum_i (w_i q_i x_i)^2 > best_{m} \cdot  \sum_i w_i q_i^2\\
-s_m & else
-\end{cases}
-$$
-\[x=y\]
-$$
-best_{m+1} = 
-\begin{cases} 
-    s_{m+1} \cdot \sum_i w_i q_i x_i & if &  \sum_i (w_i q_i x_i)^2 > best_{m} \cdot  \sum_i w_i q_i^2\\
-    best_{m} & else
-\end{cases}
+F = \sum_i w_i (s q_i - x_i)^2 = 
+\sum_i (w_i s^2 q_i^2 - 2 w_i s q_i x_i + w_i x_i^2)
 $$
 
-7. Variate $iscale$, try again from the step 4
+Further simplification gives:
+
+$$
+F = s^2 \sum_i w_i q_i^2 - 2s \sum_i w_i q_i x_i + \sum_i w_i x_i^2
+$$
+
+### Solving for $s$
+
+Now, let's take the derivative of this function with respect to $s$ and solve for $s$ to determine the optimal scale.
+
+$$
+\frac{dF}{ds} = 2s \sum_i w_i q_i^2 - 2 \sum_i w_i q_i x_i
+$$
+
+Setting the derivative equal to zero:
+
+$$
+\frac{dF}{ds} = 0 \implies 2s \sum_i w_i q_i^2 - 2 \sum_i w_i q_i x_i = 0
+$$
+
+Simplifying this:
+
+$$
+s \sum_i w_i q_i^2 = \sum_i w_i q_i x_i
+$$
+
+Solving for $s$:
+
+$$
+s = \frac{\sum_i w_i q_i x_i}{\sum_i w_i q_i^2}
+$$
+
+This is exactly what is implemented [here](https://github.com/ggerganov/llama.cpp/blob/30f80ca0bcee58669ada7a94244eeccc8c4807cc/ggml/src/ggml-quants.c#L1681).
+
+### The Actual Problem
+
+Now that the scale $s$ can be computed for the given $q_i$, the actual problem is to find such $q_i$ and $s$ that minimize the function (1). This is a mixed integer problem, which is very hard to solve in general.
+
+### Approximation Approach
+
+The approach is to iterate over some permutations of $q_i$ to achieve lower perplexity (ppl) of the target model rather than directly minimizing function (1), as this function only measures the similarity between quantized weights and original weights, not the model's quality itself.
+
+### Algorithm Outline
+
+1. **Choose an initial scale $s$**:
+   $$
+   s_m = \frac{(\sum_i w_i q_i x_i)_m}{(\sum_i w_i q_i^2)_m}
+   $$
+
+2. **Choose the initial $iscale$**.
+
+3. **Define the initial alignment between quantized values and original ones**:
+   $$
+   best_m = \frac{(\sum_i w_i q_i x_i)^2_m}{(\sum_i w_i q_i^2)_m}
+   $$
+
+4. **Calculate the quantized weights based on the chosen $iscale$**:
+   $$
+   q = \text{clip}(\text{round}(iscale \cdot x), i, j)
+   $$
+
+5. **Calculate new intermediate sums based on the newly quantized weights**:
+   $$
+   (\sum_i w_i q_i x_i)_{m+1}
+   $$
+   $$
+   (\sum_i w_i q_i^2)_{m+1}
+   $$
+
+6. **Check if the current alignment is better than the previous one, and update the scale and alignment**:
+   $$
+   s_{m+1} = 
+   \begin{cases}
+   \frac{(\sum_i w_i q_i x_i)_{m+1}}{(\sum_i w_i q_i^2)_{m+1}} & \text{if} & (\sum_i w_i q_i x_i)^2 > best_{m} \cdot \sum_i w_i q_i^2 \\
+   s_m & \text{otherwise}
+   \end{cases}
+   $$
+   
+   $$
+   best_{m+1} = 
+   \begin{cases} 
+   s_{m+1} \cdot \sum_i w_i q_i x_i & \text{if} & (\sum_i w_i q_i x_i)^2 > best_m \cdot \sum_i w_i q_i^2 \\
+   best_m & \text{otherwise}
+   \end{cases}
+   $$
+
+7. **Vary $iscale$** and repeat from step 4.
