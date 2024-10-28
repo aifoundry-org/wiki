@@ -3,7 +3,7 @@
 
 # Problem Statement
 
-The idea is to formulate the quantization problem as follows:
+The idea is to formulate the quantization problem as follows and solve it using Least Squares Method:
 
 Minimize the square difference between quantized weights and the original values:
 
