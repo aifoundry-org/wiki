@@ -7,9 +7,9 @@ The idea is to formulate the quantization problem as follows and solve it using 
 
 Minimize the square difference between quantized weights and the original values:
 
-1. $$F = \sum_i w_i (s q_i - x_i)^2$$
+$$F(s) = \sum_i w_i (s q_i - x_i)^2 \tag{1} $$
 
-Where:
+where:
 - $w_i$ is the weight importance *(taken from the importance matrix in the previous step)*,
 - $s$ is the quantization scale,
 - $q_i$ are the quantized weights,
@@ -33,13 +33,13 @@ $$
 Now, let's take the derivative of this function with respect to $s$ and solve for $s$ to determine the optimal scale.
 
 $$
-\frac{dF}{ds} = 2s \sum_i w_i q_i^2 - 2 \sum_i w_i q_i x_i
+\frac{\partial F}{\partial s} = 2s \sum_i w_i q_i^2 - 2 \sum_i w_i q_i x_i
 $$
 
 Setting the derivative equal to zero:
 
 $$
-\frac{dF}{ds} = 0 \implies 2s \sum_i w_i q_i^2 - 2 \sum_i w_i q_i x_i = 0
+\frac{\partial F}{\partial s} = 0 \implies 2s \sum_i w_i q_i^2 - 2 \sum_i w_i q_i x_i = 0
 $$
 
 Simplifying this:
@@ -58,13 +58,13 @@ This is exactly what is implemented [here](https://github.com/ggerganov/llama.cp
 
 ### The Actual Problem
 
-Now that the scale $s$ can be computed for the given $q_i$, the actual problem is to find such $q_i$ and $s$ that minimize the function (1). This is a mixed integer problem, which is very hard to solve in general.
+Now that the scale $s$ can be computed for the given $q_i$, the actual problem is to find such $q_i$ and $s$ that minimize the function $(1)$. This is a mixed integer problem, which is very hard to solve in general.
 
 ### Approximation Approach
 
 The approach is to iterate over some permutations of $q_i$ to achieve lower perplexity (ppl) of the target model rather than directly minimizing function (1), as this function only measures the similarity between quantized weights and original weights, not the model's quality itself.
 
-### Algorithm Outline
+### Quantization loop
 
 1. **Choose an initial scale $s$**:
 
