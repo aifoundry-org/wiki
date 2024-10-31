@@ -7,9 +7,8 @@ The idea is to formulate the quantization problem as follows and solve it using 
 
 Minimize the square difference between quantized weights and the original values:
 
-$$\tag{1}$$
 ```math
-F(s) = \sum_i w_i (s q_i - x_i)^2
+F(s) = \sum_i w_i (s q_i - x_i)^2 \quad (1)
 ```
 
 where:
