@@ -7,7 +7,7 @@ The problem formulation  is the same as in [make_qx_quants](make_qx_quants.md) m
 But with additional parameter and looks as follows:
 
 $$
-F(s, z) = \sum_i w_i((s q_i + z) - x_i)^2 \tag{1}
+F(s, z) = \sum_i w_i((s q_i + z) - x_i)^2 \quad (1)
 $$
 
 where:
@@ -29,6 +29,7 @@ $$
 $$
 
 2.**Partial derivative with respect to** $z$:
+
 $$
 \frac{\partial F}{\partial z} = 2 \sum_i w_i ((s q_i + z) - x_i)
 $$
@@ -45,7 +46,7 @@ $$
 
 3.**This system of equations** can be rewritten in matrix form:
 
-$$
+```math
 \begin{bmatrix}
 \sum_i w_i q_i^2 & \sum_i w_i q_i \\
 \sum_i w_i q_i & \sum_i w_i 
@@ -61,32 +62,34 @@ z
 \sum_i w_i x_i 
 \end{bmatrix}
 
-\tag{2}
-$$
+\quad (2)
+```
 
 Using Crammer's rule system $(2)$ could be solved for $s$ and $z$.
 
 *Determinant* $D$ could be calculated
 
-$$
+```math
 D = 
 \begin{vmatrix}
 \sum_i w_i q_i^2 & \sum_i w_i q_i \\
 \sum_i w_i q_i & \sum_i w_i 
 \end{vmatrix}
 = 
-\sum_i w_i q_i^2 \cdot \sum_i w_i - \sum w_i q_i \cdot \sum w_i q_i \tag{3}
-$$
+\sum_i w_i q_i^2 \cdot \sum_i w_i - \sum w_i q_i \cdot \sum w_i q_i \quad (3)
+```
+
+
 *[Determinant calculation](https://github.com/ggerganov/llama.cpp/blob/524afeec9dad7d765ce91f5cf30c73703867cb47/ggml/src/ggml-quants.c#L1869)*
 
 4.**Solving** for $s$ and $z$:
 
 $$
-s = \frac{\sum_i w_i \cdot \sum_i w_i x_i q_i - \sum_i w_i x_i \cdot \sum_i w_i q_i  }{D} \tag{4}
+s = \frac{\sum_i w_i \cdot \sum_i w_i x_i q_i - \sum_i w_i x_i \cdot \sum_i w_i q_i  }{D} \quad (4)
 $$
 
 $$
-z = \frac{\sum_i w_i q_i^2 \cdot \sum_i w_i x_i - \sum_i w_i q_i \cdot \sum_i w_i x_i q_i}{D} \tag{5}
+z = \frac{\sum_i w_i q_i^2 \cdot \sum_i w_i x_i - \sum_i w_i q_i \cdot \sum_i w_i x_i q_i}{D} \quad (5)
 $$
 
 [Scale ($s$) calculation ](https://github.com/ggerganov/llama.cpp/blob/524afeec9dad7d765ce91f5cf30c73703867cb47/ggml/src/ggml-quants.c#L1871C19-L1871C29)
@@ -101,6 +104,7 @@ As mentioned in [make_qx_quants](make_qx_quants.md) method, this optimization pr
 *in this context $min$ acts as z-offset in process of quantization*
 
 1. **Set $iscale$**:
+
 $$
 iscale = \frac{r_{min} + r_{delta} \cdot is + n_{max}}{max - min}
 $$
@@ -110,6 +114,7 @@ where:
 * $min$ and $max$ are observed minimum and maximum values of weights 
 
 2. **Quantize weights using new $iscale$**:
+
 $$
 q_i = clamp( \lfloor iscale \cdot (x_i - min) + 0.5 \rfloor, 0, n_{max})
 $$
@@ -119,11 +124,12 @@ $$
 4. **Compute denominator $D$ from equation $(3)$**
 
 5. **Check if $D > 0$ to ensure solvability.**
-    * If $D \leq 0 $ skip to the next iteration.
+    * If $D \leq 0$ skip to the next iteration.
 
 6. **Calculate $scale$ and $offset$ using $(4)$ $(5)$ equations.**
 
 7. **Compute the error with updated parameters:**
+
 $$
 E = \sum_i w_i \cdot (s \cdot q_i + min - x_i)
 $$
