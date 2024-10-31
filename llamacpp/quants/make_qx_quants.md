@@ -12,7 +12,7 @@ F(s) = \sum_i w_i (s q_i - x_i)^2 \tag{1}
 ```
 
 <p align="center"> 
-<img src="https://latex.codecogs.com/gif.latex?F(s) = \sum_i w_i (s q_i - x_i)^2 \tag{1}" />
+<img src="https://latex.codecogs.com/gif.latex?F(s)=\sum_i w_i (s q_i - x_i)^2 \tag{1}" />
 </p>
 <!-- $$F(s) = \sum_i w_i (s q_i - x_i)^2 \tag{1} $$ -->
 
