@@ -129,9 +129,9 @@ E = \sum_i w_i \cdot (s \cdot q_i + min - x_i)
 $$
 
 8. **Update the best parameters if the error has decreased:**
-* If $E < best_mad:$
+* If $E < best_{mad}:$
     * update quantized weights $q_i$
-    * Set $best_mad = E$ 
+    * Set $best_{mad} = E$ 
     * Update $scale$ and $min$
 
 ### Return

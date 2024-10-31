@@ -7,7 +7,11 @@ The idea is to formulate the quantization problem as follows and solve it using 
 
 Minimize the square difference between quantized weights and the original values:
 
-$$F(s) = \sum_i w_i (s q_i - x_i)^2 \tag{1} $$
+```math
+F(s) = \sum_i w_i (s q_i - x_i)^2 \tag{1}
+```
+
+<!-- $$F(s) = \sum_i w_i (s q_i - x_i)^2 \tag{1} $$ -->
 
 where:
 - $w_i$ is the weight importance *(taken from the importance matrix in the previous step)*,
@@ -66,13 +70,27 @@ The approach is to iterate over some permutations of $q_i$ to achieve lower perp
 
 ### Quantization loop
 
+
 1. **Choose an initial scale $s$**:
 
 $$
 s_m = \frac{(\sum_i w_i q_i x_i)_m}{(\sum_i w_i q_i^2)_m}
 $$
 
-2. **Choose the initial $iscale$**.
+#### For each step $is$ from $-9$ to $9$
+
+*$(-9, 9)$ range is a heuristic*
+
+
+2. **Choose the $iscale$**:
+
+$$
+iscale = \frac{-(nmax + 0.1 \cdot is)}{max}
+$$
+
+where:
+* $nmax$ is a parameter
+* $max$ is observed max weights value
 
 3. **Define the initial alignment between quantized values and original ones**:
 
@@ -98,13 +116,13 @@ $$
 
 6. **Check if the current alignment is better than the previous one, and update the scale and alignment**:
 
-$$
+```math
 s_{m+1} = 
 \begin{cases}
 \frac{(\sum_i w_i q_i x_i)_{m+1}}{(\sum_i w_i q_i^2)_{m+1}} & \text{if} & (\sum_i w_i q_i x_i)^2 > best_{m} \cdot \sum_i w_i q_i^2 \\
 s_m & \text{otherwise}
 \end{cases}
-$$
+```
 
 $$
 best_{m+1} = 
@@ -114,4 +132,4 @@ best_m & \text{otherwise}
 \end{cases}
 $$
 
-7. **Vary $iscale$** and repeat from step 4.
+7. **Repeat from step $2$**.
