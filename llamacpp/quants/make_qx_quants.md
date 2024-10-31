@@ -8,13 +8,8 @@ The idea is to formulate the quantization problem as follows and solve it using 
 Minimize the square difference between quantized weights and the original values:
 
 ```math
-F(s) = \sum_i w_i (s q_i - x_i)^2 \tag{1}
+\tag{1} F(s) = \sum_i w_i (s q_i - x_i)^2
 ```
-
-<p align="center"> 
-<img src="https://latex.codecogs.com/gif.latex?F(s)=\sum_i w_i (s q_i - x_i)^2 \tag{1}" />
-</p>
-<!-- $$F(s) = \sum_i w_i (s q_i - x_i)^2 \tag{1} $$ -->
 
 where:
 - $w_i$ is the weight importance *(taken from the importance matrix in the previous step)*,
