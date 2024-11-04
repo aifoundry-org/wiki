@@ -1,8 +1,12 @@
-# Quantization
+# Quantization Documentation
+This document provides explanations for quantization methods from [llamacpp](https://github.com/ggerganov/llama.cpp), though they have not yet been verified by the original authors.
 
-## Quant Types
+## General Overview
+All methods discussed fall under post-training quantization (PTQ). Additionally, the document presents interesting concepts for calculating importance matrices and different approaches to quantization granularity.
 
-All approaches based on PTQ. With specifics of superblocks.
+## Implementation
+
+In this section each quantization method is presented as well as the links to it's implementation.
 
 | **type** | **source** | **description** |
 | --- | --- | --- |
@@ -36,6 +40,31 @@ All approaches based on PTQ. With specifics of superblocks.
 | IQ1_S | [**HF**](https://huggingface.co/CISCai/OpenCodeInterpreter-DS-6.7B-SOTA-GGUF/blob/main/README.md?code=true#L59-L70) | 1-bit quantization (`q`). Super-blocks with 256 weights. Weight `w` is obtained using `super_block_scale` & `importance matrix`, resulting in 1.56 bits-per-weight. |
 | IQ1_M | [**GH**](https://github.com/ggerganov/llama.cpp/pull/6302) | 1-bit quantization (`q`). Super-blocks with 256 weights. Weight `w` is obtained using `super_block_scale` & `importance matrix`, resulting in 1.75 bits-per-weight. |
 
+
+## Documentation
+
+This section provides links to overviews of various quantization methods.
+
+The descriptions below link to explanations of specific quantization methods and their optimal quantization configurations.
+
+| Quantization Method                            | Bit Configurations                 |
+|----------------------------------------------- | ---------------------------------- |
+| [quantize_row_iq1_m_impl](quants/quantize_row_iq1_m_impl.md)| IQ1_M                 |
+| [make_qkx1_quants](quants/make_qkx1_quants.md) | Not used                           |
+| [make_qkx2_quants](quants/make_qkx2_quants.md) | q2_K_ref, q4_K_ref, q5_K_ref       |
+| [make_qkx3_quants](quants/make_qkx3_quants.md) | q2_K_impl, q4_K_impl, q5_1_impl    |
+| [make_q3_quants](quants/make_q3_quants.md)     | q3_K_ref                           |
+| [make_qx_quants](quants/make_qx_quants.md)     | q5_0_impl, q3_K_impl, q6_K_ref, q6_K_impl, q4_0_impl |
+
+---
+### Importance matrix calculation
+
+[**importance matrix**](quants/importance_matrix.md)
+
+---
+
+### Rounding implementation
+
 Based on **IEEE 754** 
 
 ```cpp
@@ -49,14 +78,3 @@ static inline int nearest_int(float fval) {
 
 *Ikawrak’s invention*
 
-| Quantization method                             | Bits configurations             |
-|-------------------------------------------------| ------------------------------- |
-| [make_qkx1_quants](quants/make_qkx1_quants.md)  | Not used                        |
-| [make_qkx2_quants](quants/make_qkx2_quants.md)  | q2_K_ref, q4_K_ref, q5_K_ref    |
-| [make_qkx3_quants](quants/make_qkx3_quants.md)  | q2_K_impl, q4_K_impl, q5_1_impl |
-| [make_q3_quants](quants/make_q3_quants.md)      | q3_K_ref                        |  
-| [make_qx_quants](quants/make_qx_quants.md)      | q5_0_impl, q3_K_impl , q6_K_ref | q6_K_impl, q4_0_impl | 
-
-
-
-### [importance matrix](quants/importance_matrix.md)

@@ -3,7 +3,7 @@
 
 # Problem Statement
 
-The problem formulation  is the same as in [make_qx_quants](make_qx_quants.md) method. 
+The problem formulation is the same as in [make_qx_quants](make_qx_quants.md) method. 
 But with additional parameter and looks as follows:
 
 $$
