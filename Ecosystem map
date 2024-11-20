@@ -20,6 +20,8 @@ AI Infrastructure: Tools for managing, optimizing, and deploying AI models (e.g.
 - GPUStack
 - TorchServe
 - KubeAI
+- Corsair
+
 
 AI Ethics and Governance: Tools that focus on bias detection, interpretability, and model governance (e.g., Fairness AI)
 
@@ -32,10 +34,10 @@ Data Management: Transportation and Processing
 - DuckDB
 - LanceDB
 - llamaindex
+- Motherduck/DuckDB
 
 HARDWARE
-Chips, Semiconductors, GPUs
-- Esperanto (chips)
+AI Accelerators: Specialized hardware like GPUs, TPUs, and AI chips (e.g., NVIDIA A100, Google TPU) optimized for AI computations- Esperanto (chips)
 - Celestial AI (chiplets)
 - Eliyan (processors)
 - Hailo (edge chips)
@@ -45,17 +47,18 @@ Chips, Semiconductors, GPUs
 - Tenstorrent
 - MetisX (memory, data centers)
 - Taalas (chips for handling llms without external memory)
+- 
 
-AI Accelerators: Specialized hardware like GPUs, TPUs, and AI chips (e.g., NVIDIA A100, Google TPU) optimized for AI computations
 
-
-Edge AI: AI-capable hardware for running models locally on constrained devices (e.g., mobile processors, AI SoCs like Intel Movidius)
+Edge AI: AI-capable hardware for running models locally on constrained devices (e.g., mobile processors, AI SoCs like)
+-Intel Movidius
 
 
 AI Data Storage&Processing: Storage solutions optimized for handling large datasets required for AI (e.g., distributed file systems, high-speed storage)
 - 
 - 
 
-Quantum Computing: Hardware solutions focused on leveraging quantum mechanics for AI tasks (e.g., IBM Quantum, D-Wave)
-
+Quantum Computing: Hardware solutions focused on leveraging quantum mechanics for AI tasks
+- IBM Quantum
+- D-Wave
 
