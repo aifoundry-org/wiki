@@ -76,29 +76,29 @@ sl2 = sl2 + w q_{new}^2
 ```
 7. Check if new quantization improves target minimization goal.
 
-    1. To deduce that target function was improved for new quantization valules and therefore quantization error was decreased $\Delta F$ should be calculated:
+7.1. To deduce that target function was improved for new quantization valules and therefore quantization error was decreased $\Delta F$ should be calculated:
 
 
-    ```math
+```math
     \Delta F = F_{new} - F_{old} = \\(\sum_i w_i x_i^2 - \frac{(\sum_i w_i x_i q_i)_{new}^2}{\sum_i (w_i q_i^2)_{new}}) - (\sum_i w_i x_i^2 - \frac{(\sum_i w_i x_i q_i)_{old}^2}{\sum_i (w_i q_i^2)_{old}}) = \\ (\frac{(\sum_i w_i x_i q_i)_{old}^2}{(\sum_i w_i q_i^2)_{old}}) - (\frac{(\sum_i w_i x_i q_i)_{new}^2}{(\sum_i w_i q_i^2)_{new}})
-    ```
-    2. Condition $\Delta F < 0$ should be met in order for quantization error to decrease. Therefore:
-    ```math
+```
+7.2. Condition $\Delta F < 0$ should be met in order for quantization error to decrease. Therefore:
+```math
     \frac{(\sum_i w_i x_i q_i)_{new}^2}{(\sum_i w_i q_i^2)_{new}} > \frac{(\sum_i w_i x_i q_i)_{old}^2}{(\sum_i w_i q_i^2)_{old}}
-    ```
-    3. Rearrange the inequality to isolate the terms involving the new quantization values:
+```
+7.3. Rearrange the inequality to isolate the terms involving the new quantization values:
 
-    ```math
+```math
     (\sum_i w_i x_i q_i)_{new}^2 \cdot (\sum_i w_i q_i^2)_{old} > (\sum_i w_i x_i q_i)_{old}^2 \cdot (\sum_i w_i q_i^2)_{new}
-    ```
+```
 
-    4. Substitute the definitions of $sumlx$ and $suml2$:
+7.4. Substitute the definitions of $sumlx$ and $suml2$:
 
-    ```math
+```math
     ( {sumlx}_{new})^2 \cdot  {suml2}_{old} > ( {sumlx}_{old})^2 \cdot  {suml2}_{new} \quad (3)
-    ```
+```
 
-    5. If condition $(3)$ is met, then accept new quantization value along this dimensino $j$ and set sums $$sumlx_{old} = sumlx_{new}$$ $$suml2_{old} = suml2_{new} $$
+7.5. If condition $(3)$ is met, then accept new quantization value along this dimensino $j$ and set sums $$sumlx_{old} = sumlx_{new}$$ $$suml2_{old} = suml2_{new} $$
 
 8. Proceed to the next dimension at stage 3.
 9. Iterate over all dimensions 5 times *(heuristic i guess)*
