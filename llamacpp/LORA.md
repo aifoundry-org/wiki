@@ -243,3 +243,126 @@ Interesting thing though, that addition of values to FF and nomalization modules
 Because according to the original [paper](https://arxiv.org/abs/2106.09685), the authors highlight, that they **only adapting the attention weights**. Therefore other modules modification may lead to unexpected results and performance drop. 
 
 *Though further investigation needed*
+
+### Context initialization
+
+During finetuning different contexts are used:
+
+1. `ggml_context`
+    
+    Used for memory and state management for tensor operations. Therefore all computation graphs are defined inside a context.
+
+    <details>
+
+    ```c++
+    struct ggml_context {
+        size_t mem_size;
+        void * mem_buffer;
+        bool   mem_buffer_owned;
+        bool   no_alloc;
+        bool   no_alloc_save; // this is used to save the no_alloc state when using scratch buffers
+
+        int    n_objects;
+
+        struct ggml_object * objects_begin;
+        struct ggml_object * objects_end;
+
+        struct ggml_scratch scratch;
+        struct ggml_scratch scratch_save;
+    };
+    ```
+
+    </details>
+
+2. `llama_context`
+
+    Used for model state and data management. Incapsulates `qqml_context` as a part of `llama_model` structure.
+
+    <details>
+
+    ```c++
+        struct llama_context {
+        llama_context(const llama_model & model) : model(model), t_load_us(model.t_load_us), t_start_us(model.t_start_us) {}
+        ~llama_context() {
+            if (model_owner) {
+                delete &model;
+            }
+    #ifdef GGML_USE_METAL
+            if (ctx_metal) {
+                ggml_metal_free(ctx_metal);
+            }
+    #endif
+            if (alloc) {
+                ggml_allocr_free(alloc);
+            }
+        }
+
+        std::mt19937 rng;
+
+        bool has_evaluated_once = false;
+
+        int64_t t_sample_us = 0;
+        int64_t t_eval_us   = 0;
+        int64_t t_p_eval_us = 0;
+
+        int32_t n_sample = 0; // number of tokens sampled
+        int32_t n_eval   = 0; // number of eval calls
+        int32_t n_p_eval = 0; // number of tokens in eval calls for the prompt (with batch size > 1)
+
+        const llama_model & model;
+
+        bool model_owner = false;
+
+        int64_t t_load_us;
+        int64_t t_start_us;
+
+        // key + value cache for the self attention
+        struct llama_kv_cache kv_self;
+
+        // decode output (2-dimensional array: [n_tokens][n_vocab])
+        std::vector<float> logits;
+        bool logits_all = false;
+
+        // input embedding (1-dimensional array: [n_embd])
+        std::vector<float> embedding;
+
+        // reusable buffer for `struct ggml_graph_plan.work_data`
+        std::vector<uint8_t> work_buffer;
+
+        // memory buffers used to evaluate the model
+        llama_buffer buf_compute;
+
+        llama_buffer buf_alloc;
+        ggml_allocr * alloc = NULL;
+
+    #ifdef GGML_USE_METAL
+        ggml_metal_context * ctx_metal = NULL;
+    #endif
+
+    #ifdef GGML_USE_MPI
+        ggml_mpi_context * ctx_mpi = NULL;
+    #endif
+    };
+    ```
+
+    </details>
+
+```mermaid
+graph TD
+ctx[ggml_context]
+ctx_c[ctx_compute]
+ctx_i[ctx_input]
+ctx_w[ctx_work]
+l_ctx[llama_context]
+lctx[lctx]
+
+ctx --> ctx_c
+ctx --> ctx_i
+ctx --> ctx_w
+l_ctx --> lctx
+```
+
+1. `lctx` - context for llama model and token processing.
+2. `ctx_compute` - context for assigning finetune graph
+3. `ctx_input` - context for assigning and managing input tensors *wihtout their data apparantely*
+4. `ctx_work` - context for performing actual finetuning invocating `ggml_opt_result ggml_opt_resume_g` method 
