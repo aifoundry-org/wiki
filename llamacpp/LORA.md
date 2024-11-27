@@ -2,7 +2,7 @@
 
 ## Lora implementation inside llama.cpp
 
-source : https://github.com/xaedes/llama.cpp/tree/finetune-lora
+[SOURCE](https://github.com/xaedes/llama.cpp/tree/finetune-lora)
 
 ```mermaid
 ---
@@ -13,7 +13,7 @@ ip[Initialize params]
 ictx[Initialize context]
 rbm[Read base model]
 tkn[Data tokenization]
-mexp[Expand base model]
+mexp[Alternate base model]
 rlor[Init lora]
 bcomp[Building finetuning graph]
 ftn[Finetuning]
@@ -36,8 +36,9 @@ ictx --> tkn
 ictx --> rlor
 end
 
+ip --> tkn
 ip --> bcomp
-mexp --> bcomp
+mexp --> rlor
 ictx --> bcomp
 rlor --> bcomp
 
@@ -173,13 +174,12 @@ Reading model -> alternating model to introduce adapters -> finetuning -> profit
 struct llama_model * lmodel = llama_load_model_from_file(params.fn_model_base, llama_params);
 ```
 
-### Expanding base model
+### Alternating base model
 
-This process performed in 2 steps:
+Alternate base model of type `llama_model` -> `my_llama_model`. Not really sure why. The difference that I observe is eliminating bias in `my_llama_layer` which is replacement for base `llama_layer`.
 
-1. Alternate base model of type `llama_model` -> `my_llama_model`. Not really sure why. The difference that I observe is eliminating bias in `my_llama_layer` which is replacement for base `llama_layer`.
-2. Alternate `my_llama_model`, introducing lora values to each `my_llama_layer`.
 
+Nothing really special about this method. Just basic mapping and shapes assertion as far as I can see.
 #### Base model alternation
 
 ```c++
@@ -187,62 +187,6 @@ init_model(lmodel, &model, params.fn_model_base, params.common.n_ctx);
 ```
 
 [Link to the method implementation](https://github.com/xaedes/llama.cpp/blob/546112944a0e025ec4a11d23dc57730041b8d273/examples/finetune/finetune.cpp#L278)
-
-Nothing really special about this method. Just basic mapping and shapes assertion as far as I can see.
-
-#### Introducing lora values
-```c++
-init_lora(&model, &lora);
-```
-[Link to the method implementation](https://github.com/xaedes/llama.cpp/blob/546112944a0e025ec4a11d23dc57730041b8d273/examples/finetune/finetune.cpp#L438)
-
-Idea is to introduce additional values into the layer definition.
-
-And then this weights will be used in computation graph such as:
-```math
-h = W_0x + \Delta Wx = W_0x + BAx
-```
-where:
-- $B$, $A$ - low dimension matrices
-- $W_0$ - original weights, frozen during finetuning
-
-
-<details>
-<summary>Adding new tensors to the layers</summary>
-
-```c++
-layer.attention_norm_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_attention_norm, n_embd);
-layer.attention_norm_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_attention_norm, 1);
-
-// Additional weights for attention module
-layer.wq_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wq, n_embd);
-layer.wq_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wq, n_embd);
-layer.wk_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wk, n_embd);
-layer.wk_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wk, n_embd_gqa);
-layer.wv_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wv, n_embd);
-layer.wv_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wv, n_embd_gqa);
-layer.wo_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wo, n_embd);
-layer.wo_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wo, n_embd);
-
-// Additional weight to normalization module
-layer.ffn_norm_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_ffn_norm, n_embd);
-layer.ffn_norm_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_ffn_norm, 1);
-
-// Additional weight to Feed-Forward module
-layer.w1_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_w1, n_embd);
-layer.w1_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_w1, n_ff);
-layer.w2_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_w2, n_ff);
-layer.w2_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_w2, n_embd);
-layer.w3_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_w3, n_embd);
-layer.w3_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_w3, n_ff);
-
-```
-</details>
-
-Interesting thing though, that addition of values to FF and nomalization modules.
-Because according to the original [paper](https://arxiv.org/abs/2106.09685), the authors highlight, that they **only adapting the attention weights**. Therefore other modules modification may lead to unexpected results and performance drop. 
-
-*Though further investigation needed*
 
 ### Context initialization
 
@@ -365,4 +309,130 @@ l_ctx --> lctx
 1. `lctx` - context for llama model and token processing.
 2. `ctx_compute` - context for assigning finetune graph
 3. `ctx_input` - context for assigning and managing input tensors *wihtout their data apparantely*
-4. `ctx_work` - context for performing actual finetuning invocating `ggml_opt_result ggml_opt_resume_g` method 
+4. `ctx_work` - context for performing actual finetuning, invocating `ggml_opt_result ggml_opt_resume_g` method 
+
+### Lora initialization
+
+Method where the most of the magic happens.
+
+```c++
+init_lora(&model, &lora);
+```
+[Link to the method implementation](https://github.com/xaedes/llama.cpp/blob/546112944a0e025ec4a11d23dc57730041b8d273/examples/finetune/finetune.cpp#L438)
+
+Idea is to introduce additional values into the layer definition.
+
+And then this weights will be used in computation graph such as:
+```math
+h = W_0x + \Delta Wx = W_0x + BAx
+```
+where:
+- $B$, $A$ - low dimension matrices
+- $W_0$ - original weights, frozen during finetuning
+
+
+<details>
+<summary>Adding new tensors to the layers</summary>
+
+```c++
+layer.attention_norm_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_attention_norm, n_embd);
+layer.attention_norm_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_attention_norm, 1);
+
+// Additional weights for attention module
+layer.wq_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wq, n_embd);
+layer.wq_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wq, n_embd);
+layer.wk_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wk, n_embd);
+layer.wk_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wk, n_embd_gqa);
+layer.wv_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wv, n_embd);
+layer.wv_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wv, n_embd_gqa);
+layer.wo_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wo, n_embd);
+layer.wo_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_wo, n_embd);
+
+// Additional weight to normalization module
+layer.ffn_norm_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_ffn_norm, n_embd);
+layer.ffn_norm_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_ffn_norm, 1);
+
+// Additional weight to Feed-Forward module
+layer.w1_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_w1, n_embd);
+layer.w1_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_w1, n_ff);
+layer.w2_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_w2, n_ff);
+layer.w2_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_w2, n_embd);
+layer.w3_a = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_w3, n_embd);
+layer.w3_b = ggml_new_tensor_2d(ctx, GGML_TYPE_F32, lparams.n_rank_w3, n_ff);
+
+```
+</details>
+
+
+Interesting thing, that addition of values to FF and nomalization modules.
+Because according to the original [paper](https://arxiv.org/abs/2106.09685), the authors highlight, that they **only adapting the attention weights**. Therefore other modules modification may lead to unexpected results and performance drop. 
+
+*Though further investigation needed*
+
+### Data tokenization
+
+Data preprocessing step.
+
+```c++
+tokenize_file(lctx,
+            params.common.fn_train_data,
+            params.common.sample_start,
+            params.common.include_sample_start,
+            params.common.overlapping_samples,
+            n_tokens,
+            train_tokens,
+            train_samples_begin,
+            train_samples_size);
+```
+
+[Link to the method implementation](https://github.com/xaedes/llama.cpp/blob/546112944a0e025ec4a11d23dc57730041b8d273/common/train.cpp#L820)
+
+For model to be finetuned, the input data needs to be tokenized, and that exactly what this method does.
+
+### Builidng finetuning graph
+
+This graph is used to define operations that needed to be performed with model and data in order to finetune it.
+```c++
+loss = llama_build_lora_finetune_graphs(
+        &model, &lora, alloc, ctx_compute,
+        gf, gb, gb_tmp,
+        &logits, tokens_input, target_probs,
+        n_tokens, n_batch,
+        params.common.use_flash,
+        params.common.use_checkpointing
+    );
+```
+
+[Link to the method implementation](https://github.com/xaedes/llama.cpp/blob/546112944a0e025ec4a11d23dc57730041b8d273/examples/finetune/finetune.cpp#L584)
+
+```mermaid
+flowchart TD
+    A[Start: llama_build_lora_finetune_graphs] --> B[Initialize Context and Variables]
+    B --> C[Set Names for Inputs]
+    C --> D[Initialize Tensors]
+    D --> E{Enable Checkpointing?}
+    E -->|Yes| F[Store Initial Checkpoints]
+    E -->|No| G[Proceed Without Initial Checkpoints]
+    F --> H[Continue to Attention Initialization]
+    G --> H[Continue to Attention Initialization]
+    H --> I{Use Flash Attention?}
+    I -->|Yes| J[Initialize Flash Attention]
+    I -->|No| K[Initialize Standard Attention]
+    J --> L[Proceed to Layer Processing]
+    K --> L[Proceed to Layer Processing]
+    L --> M[Process Each Layer]
+    M --> N[Finalize Graph Construction]
+    N --> O[Allocate Memory and Finalize]
+    O --> P[Set Logits and Return Loss]
+    P --> Q[End]
+
+```
+
+#### Layer processing
+
+That's the basic part of lora implementation. Just take those low-rank $A$ and $B$ matrices, multiply them, and then add to the source weight.
+
+```c++
+struct ggml_tensor * wq = add_to_f32(ctx, layer.wq, ggml_mul_mat(ctx, llayer.wq_a, llayer.wq_b));
+```
+*In this particular example operations with queries part of the attention module described.*
