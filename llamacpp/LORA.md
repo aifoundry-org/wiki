@@ -20,9 +20,6 @@ ftn[Finetuning]
 svr[Saving the results]
 
 
-click rbm "https://github.com/xaedes/llama.cpp/blob/546112944a0e025ec4a11d23dc57730041b8d273/examples/finetune/finetune.cpp#L1547"
-click mexp "https://github.com/xaedes/llama.cpp/blob/546112944a0e025ec4a11d23dc57730041b8d273/examples/finetune/finetune.cpp#L1551"
-
 subgraph Initialization
 ip --> ictx
 ip --> mexp
@@ -436,3 +433,44 @@ That's the basic part of lora implementation. Just take those low-rank $A$ and $
 struct ggml_tensor * wq = add_to_f32(ctx, layer.wq, ggml_mul_mat(ctx, llayer.wq_a, llayer.wq_b));
 ```
 *In this particular example operations with queries part of the attention module described.*
+
+#### Result
+
+As a result of this operations, you get the graph of operations, that represent your modified model. 
+
+**Input** of that graph is representing input for finetuning data.
+```c++
+struct ggml_tensor * t00 = ggml_reshape_1d(ctx, tokens_input, N*n_batch);  set_name(t00, "t00"); assert_shape_1d(t00, N*n_batch);
+```
+
+**Output** of that graph is cross entropy loss.
+```c++
+struct ggml_tensor * t36   = ggml_cross_entropy_loss(ctx, t35, targets);                         set_name(t36, "t36");     assert_shape_1d(t36, 1);
+```
+
+### Finetuning
+
+For the actual finetuning process `ggml_opt_resume_g` method are used.
+
+[Method implementation](https://github.com/xaedes/llama.cpp/blob/546112944a0e025ec4a11d23dc57730041b8d273/ggml.c#L20102)
+
+This method executes the graph performing forward and backward propogations with specified optimizer, data and the criterion of the computation end.
+
+### Saving the results
+
+For saving the lora `save_train_files` method are executed.
+It allows save the lora itself, or state of lora during training to continue finetuning process in future.
+
+In order to get finetuned model, the trained lora adapter should be applied. For that reason exporing functionality is [implemented](https://github.com/xaedes/llama.cpp/blob/finetune-lora/examples/export-lora/export-lora.cpp).
+
+The idea is simple, merge source model with trained lora, and acquire finetuned model at the end.
+
+## Thoughts
+
+There are several problems with lora implementation inside llama.cpp:
+1. **llama.cpp** and **ggml** methods are not stable and tends to change quite fast. For example `ggml_opt_resume_g` do not exist in main branch of ggml anymore, arguments for `ggml_build_backward_expand` method have been changed, etc.. 
+Suddenly you need to rewrite whole damn thing, because finetuning relies on those frameworks very much.
+2. Not much functionality for lora are implemented. Just classical lora adapter and flash attention. No qlora, no unsloth modifications, etc..
+Therefore it limits the range of application. 
+It's much easier and more convinient to finetune model using specified tool and then just merge lora, export model as in gguf format and then use llama.cpp as the inference engine.
+3. Limited amount of models are supported. As far as I understand - only LLama-like ones. No signs of MoE LLMs or multimodal LLMs.
