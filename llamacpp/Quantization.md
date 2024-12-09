@@ -1,6 +1,13 @@
 # Quantization Documentation
 This document provides explanations for quantization methods from [llamacpp](https://github.com/ggerganov/llama.cpp), though they have not yet been verified by the original authors.
 
+### To have a brief understanding of what quantization is of tu fresh up you knowledge consider this take a look at this resources:
+- https://www.youtube.com/watch?v=tFmQj7W4qlk - great video with good visualizations
+- https://arxiv.org/abs/2106.08295 - pretty paper with decent basic information
+- https://arxiv.org/abs/1712.05877 - another decent paper on quantization
+- https://huggingface.co/docs/optimum/concept_guides/quantization - brief overview on quantization from huggingface
+- https://www.youtube.com/watch?v=zpOSA503DAs - video of very questionable quality, with a bit less questionable content.
+
 ## General Overview
 All methods discussed fall under post-training quantization (PTQ). Additionally, the document presents interesting concepts for calculating importance matrices and different approaches to quantization granularity.
 
@@ -63,18 +70,4 @@ The descriptions below link to explanations of specific quantization methods and
 
 ---
 
-### Rounding implementation
-
-Based on **IEEE 754** 
-
-```cpp
-static inline int nearest_int(float fval) {
-    assert(fval <= 4194303.f);
-    float val = fval + 12582912.f; // exponent shift ?
-    int i; memcpy(&i, &val, sizeof(int)); // for direct bit manipulation ?
-    return (i & 0x007fffff) - 0x00400000; // mantissa isolation and 
-}
-```
-
-*Ikawrak’s invention*
 
