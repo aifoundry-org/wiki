@@ -11,13 +11,6 @@ If you are comfortable with LLMs but need to get started on quantization, we rec
 - https://huggingface.co/docs/optimum/concept_guides/quantization - brief overview on quantization from huggingface
 - https://www.youtube.com/watch?v=zpOSA503DAs - video of a very questionable quality, with a bit less questionable content.
 
-### To have a brief understanding of what quantization is of tu fresh up you knowledge consider this take a look at this resources:
-- https://www.youtube.com/watch?v=tFmQj7W4qlk - great video with good visualizations
-- https://arxiv.org/abs/2106.08295 - pretty paper with decent basic information
-- https://arxiv.org/abs/1712.05877 - another decent paper on quantization
-- https://huggingface.co/docs/optimum/concept_guides/quantization - brief overview on quantization from huggingface
-- https://www.youtube.com/watch?v=zpOSA503DAs - video of very questionable quality, with a bit less questionable content.
-
 ## General Overview
 All methods discussed fall under post-training quantization (PTQ). Additionally, the document presents interesting concepts for calculating importance matrices and different approaches to quantization granularity.
 
