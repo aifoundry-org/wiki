@@ -1,6 +1,19 @@
 # llamacpp LORA 
 
-## Lora implementation inside llama.cpp
+
+### Small introduction
+
+LoRA (Low-Rank Adaptation) is a method designed to efficiently fine-tune large language models and other machine learning models. 
+Instead of updating all parameters of a model, LoRA introduces a small set of trainable parameters that adjust the model's behavior. 
+These parameters are added in low-rank matrices to the model's layers, significantly reducing the number of parameters that need to be trained. 
+This approach reduces memory and computational costs, making fine-tuning large models more accessible and scalable. 
+LoRA is particularly useful in scenarios with limited computational resources or when frequent model updates are required.
+
+To know more about how LoRA works, please consider take a look at this [PAPER](https://arxiv.org/abs/2106.09685)
+
+Understanding the LoRA training implementation within the llama.cpp framework is quite important, as this framework currently occupies a leading position in the market of open-source LLM engines.
+
+## Lora training implementation inside llama.cpp
 
 [SOURCE](https://github.com/xaedes/llama.cpp/tree/finetune-lora)
 
