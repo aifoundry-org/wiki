@@ -24,8 +24,10 @@ bb   --> olm
 bb   --> hf
 wp   --> rlm
 
-click wiki "#README.md"
-click hw "./hardware"
-click llcpp "./llamacpp"
-click rlm "ramalama.md"
+click hw "https://github.com/aifoundry-org/wiki/tree/refactor/hardware"
+click llcp "https://github.com/aifoundry-org/wiki/tree/refactor/llamacpp"
+click rlm "https://github.com/aifoundry-org/wiki/blob/refactor/ramalama.md"
+click olm "https://github.com/aifoundry-org/wiki/tree/refactor/olama"
+click hf "https://github.com/aifoundry-org/wiki/tree/refactor/huggingface"
+click arch "https://github.com/aifoundry-org/wiki/tree/refactor/architecture"
 ```
