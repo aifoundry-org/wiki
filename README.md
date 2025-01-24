@@ -24,7 +24,7 @@ bb   --> olm
 bb   --> hf
 wp   --> rlm
 
-click wiki "./Readme.md"
+click wiki "#Readme.md"
 click hw "./hardware"
 click llcpp "./llamacpp"
 click rlm "./ramalama.md"
