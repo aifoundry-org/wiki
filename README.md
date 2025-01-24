@@ -24,10 +24,10 @@ bb   --> olm
 bb   --> hf
 wp   --> rlm
 
-click hw "https://github.com/aifoundry-org/wiki/tree/refactor/hardware"
-click llcp "https://github.com/aifoundry-org/wiki/tree/refactor/llamacpp"
-click rlm "https://github.com/aifoundry-org/wiki/blob/refactor/ramalama.md"
-click olm "https://github.com/aifoundry-org/wiki/tree/refactor/olama"
-click hf "https://github.com/aifoundry-org/wiki/tree/refactor/huggingface"
-click arch "https://github.com/aifoundry-org/wiki/tree/refactor/architecture"
+click hw "https://github.com/aifoundry-org/wiki/tree/main/hardware"
+click llcp "https://github.com/aifoundry-org/wiki/tree/main/llamacpp"
+click rlm "https://github.com/aifoundry-org/wiki/blob/main/ramalama.md"
+click olm "https://github.com/aifoundry-org/wiki/tree/main/olama"
+click hf "https://github.com/aifoundry-org/wiki/tree/main/huggingface"
+click arch "https://github.com/aifoundry-org/wiki/tree/main/architecture"
 ```
